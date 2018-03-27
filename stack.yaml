@@ -1,0 +1,7 @@
+flags: {}
+packages:
+- .
+allow-newer: true
+extra-deps:
+- cabal-helper-0.7.3.0
+resolver: lts-11.0
