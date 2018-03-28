@@ -1,0 +1,49 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 8e87ae61f3a880a7be6ba7ff0f54a095bc9ee81a325745c89ddfdb0e3a11616b
+
+name:           wireworld
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/jakuj/haskellove>
+homepage:       https://github.com/jakuj/haskellove#readme
+bug-reports:    https://github.com/jakuj/haskellove/issues
+author:         Jakub Janaszkiewicz
+maintainer:     janaszkiewicz.jakub@gmail.com
+copyright:      2018 Jakub Janaszkiewicz
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/jakuj/haskellove
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  other-modules:
+      Paths_wireworld
+  default-language: Haskell2010
+
+executable wireworld-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      ansi-terminal
+    , base >=4.7 && <5
+    , monad-loops
+    , split
+    , wireworld
+  other-modules:
+      Paths_wireworld
+  default-language: Haskell2010
