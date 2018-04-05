@@ -47,7 +47,7 @@ stateToChar s = fromMaybe '.' $ lookup s states
 gridToString :: Grid -> String -- encode entire grid as a string -- ? Probably unnecessary
 gridToString (Grid cells m n) = unlines $ map (map (stateToChar . state)) $ chunksOf n cells
 
-saveGrid :: Grid -> FilePath -> IO () -- save encoded grid to file -- TODO: Serialization
+saveGrid :: Grid -> FilePath -> IO () -- save encoded grid to file
 saveGrid g path = writeFile path (gridToString g)
 
 loadGrid :: FilePath -> IO Grid -- load encoded grid from file
