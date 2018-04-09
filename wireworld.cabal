@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8fe6161a148b0c0cec4a718cdb407a82bb0183d8b11c8131cf4dffecc9d9e20b
+-- hash: 8e87ae61f3a880a7be6ba7ff0f54a095bc9ee81a325745c89ddfdb0e3a11616b
 
 name:           wireworld
 version:        0.1.0.0
@@ -41,7 +41,6 @@ executable wireworld-exe
   build-depends:
       ansi-terminal
     , base >=4.7 && <5
-    , bytestring
     , monad-loops
     , split
     , wireworld
