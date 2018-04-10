@@ -1,6 +1,6 @@
 module Main where
 
-import System.IO --(stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering))
+import System.IO (stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering))
 import System.Console.ANSI -- too many functions to list them all
 import GHC.Conc (ThreadStatus, ThreadId, threadStatus, threadDelay, killThread)
 import Control.Concurrent (MVar, newMVar, swapMVar, withMVar, modifyMVar_, forkFinally)
@@ -110,10 +110,8 @@ fillGrid (Grid cells ms ns) = Grid (map (\(x, y) -> (fromMaybe (Cell Empty x y) 
         cart :: [a] -> [b] -> [(a, b)] -- Cartesian product of two vectors
         cart xs ys = [(x, y) | x <- xs, y <- ys]
 
-createNewAutomaton :: IO ()
+createNewAutomaton :: IO () -- open an editor where you can create your own Grid and save it to file
 createNewAutomaton = do
-    hSetBuffering stdin LineBuffering
-    lock <- newMVar ()
     putStrLn "Enter board size (m n): "
     dims <- map (\x -> read x :: Int) . words <$> getLine
     let [m, n] = dims
@@ -122,7 +120,7 @@ createNewAutomaton = do
     -- * main logic
     setCursorPosition 1 1
     hSetBuffering stdin NoBuffering
-    newGrid <- fillGrid <$> modifyGrid (Grid [] m n)
+    newGrid <- fillGrid <$> modifyGrid (Grid [] m n) (0, 0)
     hSetBuffering stdin LineBuffering
     putStrLn "Enter new Automaton's save path (empty for no save): "
     input <- getLine
@@ -137,33 +135,38 @@ createNewAutomaton = do
             putStrLn $ replicate (n + 2) '-'
         movements :: [(Char, IO ())] -- movement functions lookup table
         movements = [('w', cursorUp 1), ('s', cursorDown 1), ('a', cursorBackward 1), ('d', cursorForward 1)]
-        move :: Char -> Int -> Int -> IO () -- move cursor in terminal using wsad, can't go over the border
-        move c m n = do
-            pos <- fromJust <$> getCursorPosition
-            if (fst pos == 2 && c == 'w') || (fst pos == m + 1 && c == 's') || (snd pos == 2 && c == 'a') || (snd pos == n + 1 && c == 'd') 
-                then putStr ""
-            else fromJust $ lookup c movements
-        modifyGrid :: Grid -> IO Grid -- create new Grid by adding cells using accumulative recursion
-        modifyGrid grid = do
+        move :: Char -> (Int, Int) -> (Int, Int) -> IO (Int, Int) -- move cursor in terminal using wsad, can't go over the border
+        move c (m, n) pos@(x, y) =
+            if (fst pos == 0 && c == 'w') || (fst pos == m - 1 && c == 's') || (snd pos == 0 && c == 'a') || (snd pos == n - 1 && c == 'd') 
+                then return pos
+            else do
+            fromJust $ lookup c movements
+            case c of
+                'w' -> return (x - 1, y)
+                's' -> return (x + 1, y)
+                'a' -> return (x, y - 1)
+                'd' -> return (x, y + 1)
+                
+        modifyGrid :: Grid -> (Int, Int) -> IO Grid -- create new Grid by adding cells using accumulative recursion
+        modifyGrid grid pos = do
             input <- getChar'
-            if input `elem` "wsad" then move input m n >> modifyGrid grid
+            if input `elem` "wsad" then modifyGrid grid =<< move input (m, n) pos
             else case input of
                 x | x `elem` "0123" -> do
-                    pos <- fromJust <$> getCursorPosition
-                    let chosenState = stateMap !! digitToInt x
+                    let chosenState = stateList !! digitToInt x
                     (putStr . show) chosenState
                     cursorBackward 1
-                    modifyGrid (Grid (cells grid ++ [uncurry (Cell chosenState) ((\(x,y) -> (x-2, y-2)) pos)]) m n)
+                    modifyGrid (Grid (cells grid ++ [uncurry (Cell chosenState) pos]) m n) pos
                 '9' -> do
                     setCursorPosition (m + 3)  0
                     if null (cells grid) 
                         then return $ Grid [] 0 0
                     else return $ Grid (foldl (\c1 c2 -> if row (last c1) == row c2 && column (last c1) == column c2 then init c1 ++ [c2] else c1 ++ [c2]) [head (cells grid)] (tail (cells grid))) m n
-                _ -> modifyGrid grid
+                _ -> modifyGrid grid pos
             where
                 m = rows grid
                 n = columns grid
-                stateMap = enumFrom (toEnum 0) :: [State]
+                stateList = enumFrom (toEnum 0) :: [State]
 
 simulateAutomaton :: IO () -- simulate a Wireworld automaton
 simulateAutomaton = do
@@ -220,6 +223,7 @@ main = do
     putStrLn "Other - Quit"
     putStr "Choice: "
     choice <- getChar
+    hSetBuffering stdin LineBuffering
     putStrLn ""
     case choice of
         '1' -> simulateAutomaton
