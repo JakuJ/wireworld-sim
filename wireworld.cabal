@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e87ae61f3a880a7be6ba7ff0f54a095bc9ee81a325745c89ddfdb0e3a11616b
+-- hash: 1609a4b1541ea1f212b6f2aee9a3d17dcfa95671ae5ef107c56e0242c1a3cbf9
 
 name:           wireworld
 version:        0.1.0.0
@@ -29,6 +29,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+  exposed-modules:
+      Automaton
+      Editing
   other-modules:
       Paths_wireworld
   default-language: Haskell2010
