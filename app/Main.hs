@@ -1,10 +1,10 @@
 module Main where
 
-import System.IO (stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering))
+import System.IO --(stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering))
 import System.Console.ANSI -- too many functions to list them all
 import GHC.Conc (ThreadStatus, ThreadId, threadStatus, threadDelay, killThread)
-import Control.Concurrent (MVar, newMVar, swapMVar, modifyMVar_, forkFinally)
-import Control.Monad (forever, unless)
+import Control.Concurrent (MVar, newMVar, swapMVar, withMVar, modifyMVar_, forkFinally)
+import Control.Monad (forever, unless, when, replicateM)
 import Control.Monad.Loops (iterateWhile)
 import Data.Tuple (swap)
 import Data.List (find, delete)
@@ -112,6 +112,8 @@ fillGrid (Grid cells ms ns) = Grid (map (\(x, y) -> (fromMaybe (Cell Empty x y) 
 
 createNewAutomaton :: IO ()
 createNewAutomaton = do
+    hSetBuffering stdin LineBuffering
+    lock <- newMVar ()
     putStrLn "Enter board size (m n): "
     dims <- map (\x -> read x :: Int) . words <$> getLine
     let [m, n] = dims
@@ -119,11 +121,12 @@ createNewAutomaton = do
     putStrLn "WSAD - move, 0 - empty, 1 - wire, 2 - e. head, 3 - e. tail, 9 - finish"
     -- * main logic
     setCursorPosition 1 1
+    hSetBuffering stdin NoBuffering
     newGrid <- fillGrid <$> modifyGrid (Grid [] m n)
+    hSetBuffering stdin LineBuffering
     putStrLn "Enter new Automaton's save path (empty for no save): "
     input <- getLine
-    unless (null input) $ saveGrid newGrid input
-    putStrLn "Creating new automaton successfull!"
+    if null input then putStrLn "Didn't save" else saveGrid newGrid input >> putStrLn "Creating new automaton successfull!"
     where
         drawBorder :: Int -> Int -> IO () -- draws a border of size m x n
         drawBorder m n = do
@@ -136,7 +139,7 @@ createNewAutomaton = do
         movements = [('w', cursorUp 1), ('s', cursorDown 1), ('a', cursorBackward 1), ('d', cursorForward 1)]
         move :: Char -> Int -> Int -> IO () -- move cursor in terminal using wsad, can't go over the border
         move c m n = do
-            pos <- fromMaybe (0, 0) <$> getCursorPosition
+            pos <- fromJust <$> getCursorPosition
             if (fst pos == 2 && c == 'w') || (fst pos == m + 1 && c == 's') || (snd pos == 2 && c == 'a') || (snd pos == n + 1 && c == 'd') 
                 then putStr ""
             else fromJust $ lookup c movements
@@ -210,6 +213,7 @@ simulateAutomaton = do
 main :: IO () -- program entry point
 main = do
     -- * main menu
+    hSetBuffering stdin NoBuffering
     putStrLn "Menu:"
     putStrLn "1 - Load Grid from file"
     putStrLn "2 - Create new Grid"
