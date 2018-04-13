@@ -65,7 +65,8 @@ main = do
     hSetBuffering stdin NoBuffering
     putStrLn "Menu:"
     putStrLn "1 - Load Grid from file"
-    putStrLn "2 - Create new Grid"
+    putStrLn "2 - Modify existing Grid"
+    putStrLn "3 - Create new Grid"
     putStrLn "Other - Quit"
     putStr "Choice: "
     choice <- getChar
@@ -73,5 +74,6 @@ main = do
     putStrLn ""
     case choice of
         '1' -> simulateAutomaton
-        '2' -> createNewAutomaton
+        '2' -> modifyExistingAutomaton
+        '3' -> createNewAutomaton
         _ -> putStrLn "Main thread terminated"

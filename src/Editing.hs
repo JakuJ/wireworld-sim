@@ -1,6 +1,7 @@
 module Editing
 (
-    createNewAutomaton
+    createNewAutomaton,
+    modifyExistingAutomaton
 ) where
 
 import System.Console.ANSI
@@ -15,6 +16,13 @@ getChar' = do
     input <- getChar
     hSetEcho stdin True
     return input
+
+pprint :: Show a => [a] -> IO () -- pretty prints lists of lists
+pprint = mapM_ print
+
+-- TODO: update to Functor version
+print2D :: Grid -> (Int, Int) -> IO ()
+print2D grid (x, y) = mapM_ (\cell -> setCursorPosition (row cell + x) (column cell + y) >> print (state cell)) $ cells grid
 
 drawBorder :: Int -> Int -> IO () -- draws a border of size m x n
 drawBorder m n = do
@@ -34,39 +42,54 @@ move c (m, n) pos@(x, y) =
         'a' -> cursorBackward 1 >> return (x, y - 1)
         'd' -> cursorForward 1 >> return (x, y + 1)
 
-modifyGrid :: Grid -> (Int, Int) -> IO Grid -- create new Grid by adding cells using accumulative recursion
-modifyGrid grid pos = do
+editionLoop :: Grid -> (Int, Int) -> IO Grid -- create new Grid by adding cells using accumulative recursion
+editionLoop grid pos = do
     input <- getChar'
-    if input `elem` "wsad" then modifyGrid grid =<< move input (m, n) pos
+    if input `elem` "wsad" then editionLoop grid =<< move input (m, n) pos
     else case input of
         x | x `elem` "0123" -> do
             let chosenState = stateList !! digitToInt x
             (putStr . show) chosenState
             cursorBackward 1
-            modifyGrid (Grid (cells grid ++ [uncurry (Cell chosenState) pos]) m n) pos
+            editionLoop (Grid (addNewer (cells grid) (uncurry (Cell chosenState) pos)) m n) pos
         '9' -> do
             setCursorPosition (m + 3)  0
             if null (cells grid) 
                 then return $ Grid [] 0 0
-            else return $ Grid (foldl (\c1 c2 -> if row (last c1) == row c2 && column (last c1) == column c2 then init c1 ++ [c2] else c1 ++ [c2]) [head (cells grid)] (tail (cells grid))) m n
-        _ -> modifyGrid grid pos
+            else return grid
+        _ -> editionLoop grid pos
     where
         m = rows grid
         n = columns grid
         stateList = enumFrom (toEnum 0) :: [State]
+        addNewer :: [Cell] -> Cell -> [Cell]
+        addNewer [] c = [c]
+        addNewer (x@(Cell _ m1 n1):xs) c@(Cell _ m2 n2) = (if m1 == m2 && n1 == n2 then [] else [x]) ++ addNewer xs c
+
+modifyGrid :: Grid -> IO () -- opens editor for grid, given size
+modifyGrid grid@(Grid _ m n) = do
+    drawBorder m n
+    putStrLn "WSAD - move, 0 - empty, 1 - wire, 2 - e. head, 3 - e. tail, 9 - finish"
+    print2D grid (1, 1)
+    -- * main logic
+    setCursorPosition 1 1
+    hSetBuffering stdin NoBuffering
+    newGrid <- fillGrid <$> editionLoop grid (0, 0)
+    hSetBuffering stdin LineBuffering
+    putStrLn "Enter new Automaton's save path (empty for no save): "
+    input <- getLine
+    if null input then putStrLn "Didn't save" else saveGrid newGrid input >> putStrLn "Creating new automaton successfull!"
 
 createNewAutomaton :: IO () -- open an editor where you can create your own Grid and save it to file
 createNewAutomaton = do
     putStrLn "Enter board size (m n): "
     dims <- map (\x -> read x :: Int) . words <$> getLine
     let [m, n] = dims
-    drawBorder m n
-    putStrLn "WSAD - move, 0 - empty, 1 - wire, 2 - e. head, 3 - e. tail, 9 - finish"
-    -- * main logic
-    setCursorPosition 1 1
-    hSetBuffering stdin NoBuffering
-    newGrid <- fillGrid <$> modifyGrid (Grid [] m n) (0, 0)
-    hSetBuffering stdin LineBuffering
-    putStrLn "Enter new Automaton's save path (empty for no save): "
-    input <- getLine
-    if null input then putStrLn "Didn't save" else saveGrid newGrid input >> putStrLn "Creating new automaton successfull!"
+    modifyGrid (Grid [] m n)
+
+modifyExistingAutomaton :: IO () -- open and edit a Grid file
+modifyExistingAutomaton = do
+    putStr "Enter path: "
+    path <- getLine
+    grid <- loadGrid path
+    modifyGrid grid

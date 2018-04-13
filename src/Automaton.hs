@@ -31,6 +31,8 @@ data Automaton = Automaton {
     generation :: Int
 }
 
+--TODO: make Grid an instance of Functor
+
 instance Show State where -- overloaded Show instance for type State
     show state = fromJust $ lookup (stateToChar state) colors
 
