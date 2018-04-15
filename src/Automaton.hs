@@ -1,8 +1,9 @@
 module Automaton
 (
-    State, Cell (..), Grid (..), Automaton (..),
+    State, Cell (..), Grid (..), Automaton (..), stateList,
     saveGrid, loadGrid,
     fillGrid,
+    nextWireworld,
     nextGeneration,
     calculatePeriod
 ) where
@@ -13,6 +14,8 @@ import Data.List.Split      (chunksOf)
 import Data.Maybe           (fromMaybe, fromJust, isJust, isNothing)
 
 data State = Empty | Wire | Head | Tail deriving (Eq, Enum)
+
+stateList = enumFrom (toEnum 0) :: [State]
 
 data Cell = Cell {
     state :: State,
@@ -27,11 +30,17 @@ data Grid = Grid {
 } deriving (Eq)
 
 data Automaton = Automaton {
+    cellTypes :: [State],
+    evolutionFunction :: Automaton -> Automaton,
     grid :: Grid,
     generation :: Int
 }
 
---TODO: make Grid an instance of Functor
+nextGeneration :: Automaton -> Automaton
+nextGeneration a = evolutionFunction a a
+
+instance Eq Automaton where
+    a == b = grid a == grid b && cellTypes a == cellTypes b
 
 instance Show State where -- overloaded Show instance for type State
     show state = fromJust $ lookup (stateToChar state) colors
@@ -82,24 +91,26 @@ getNeighbours grid cell = [cells grid!!(columns grid * m + n) | m <- ms, n <- ns
         ms = filter (\z -> z >= 0 && z < rows grid) [x - 1, x, x + 1]
         ns = filter (\z -> z >= 0 && z < columns grid) [y - 1, y, y + 1]
 
-nextGeneration :: Grid -> Grid -- generate next generation of an Automaton
-nextGeneration g@(Grid cs m n) = Grid (map ruleset cs) m n
+nextWireworld :: Automaton -> Automaton -- generate next generation of a Wireworld automaton
+nextWireworld (Automaton s evo g@(Grid cs m n) gen) = Automaton s evo (Grid (map ruleset cs) m n) (gen + 1)
     where
-        heads c = length $ filter (\(Cell state _ _) -> state == Head) (getNeighbours g c) -- count electron heads in cell's neighbourhood
         ruleset :: Cell -> Cell -- determines how cells change in time
         ruleset c@(Cell s x y) 
             | s == Empty = c
             | s == Head = Cell Tail x y
             | s == Tail = Cell Wire x y
             | s == Wire = if heads c == 1 || heads c == 2 then Cell Head x y else Cell Wire x y
+            where
+                heads c = length $ filter (\(Cell state _ _) -> state == Head) (getNeighbours g c) -- count electron heads in cell's neighbourhood
 
 calculatePeriod :: Automaton -> Maybe (Int, Int) -- if the automaton loops before 500 iterations, return period of this loop
-calculatePeriod automat = recursiveCheck (grid automat) []
+calculatePeriod automat = recursiveCheck automat []
     where
-        recursiveCheck :: Grid -> [Grid] -> Maybe (Int, Int) -- takes current grid and a list of all previous grids
-        recursiveCheck grid gs
-            | length gs >= 500 = Nothing
-            | grid `elem` gs = Just $ tuple (length (takeWhile (/=grid) gs)) $ (+) 1 $ length $ takeWhile (/= grid) $ tail $ dropWhile (/= grid) gs
-            | otherwise = recursiveCheck (nextGeneration grid) $ gs ++ [grid]
-        tuple :: a -> b -> (a, b)
-        tuple a b = (a, b)
+        recursiveCheck :: Automaton -> [Automaton] -> Maybe (Int, Int) -- takes current grid and a list of all previous grids
+        recursiveCheck a@(Automaton _ _ g _) as
+            | length as >= 500 = Nothing
+            | a `elem` as = Just $ tuple (length (takeWhile (/=a) as)) $ (+) 1 $ length $ takeWhile (/= a) $ tail $ dropWhile (/= a) as
+            | otherwise = recursiveCheck (nextGeneration a) $ as ++ [a]
+            where
+                tuple :: a -> b -> (a, b)
+                tuple a b = (a, b)

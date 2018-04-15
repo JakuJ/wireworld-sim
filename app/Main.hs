@@ -18,7 +18,7 @@ simulateAutomaton :: IO () -- simulate a Wireworld automaton
 simulateAutomaton = do
     -- * load Automaton file
     putStr "Enter Automaton save file path: "
-    automatSav <- fmap (`Automaton` 0) $ loadGrid =<< getLine
+    automatSav <- fmap (\g -> Automaton stateList nextWireworld g 0) $ loadGrid =<< getLine
     automatM <- newMVar automatSav
     -- * set console parameters
     hideCursor
@@ -56,7 +56,7 @@ simulateAutomaton = do
                     (print . grid) automat1  
                     clearFromCursorToLineEnd 
                     putStrLn  ("Generation " ++ (show . generation) automat1) 
-                    return $ Automaton ((nextGeneration . grid) automat1) (generation automat1 + 1) 
+                    return $ nextGeneration automat1
                 threadDelay delay
 
 main :: IO () -- program entry point
