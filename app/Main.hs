@@ -4,7 +4,7 @@ module Main
 ) where
 
 import System.Console.ANSI
-import System.IO            (stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering))
+import System.IO            (stdin, hSetBuffering, hSetEcho, BufferMode (LineBuffering, NoBuffering), stdout)
 import GHC.Conc             (ThreadStatus, ThreadId, threadStatus, threadDelay, killThread)
 import Control.Concurrent   (MVar, newMVar, swapMVar, withMVar, modifyMVar_, forkFinally)
 import Control.Monad        (forever, unless, when, replicateM)
@@ -62,13 +62,14 @@ simulateAutomaton = do
 main :: IO () -- program entry point
 main = do
     -- * main menu
-    hSetBuffering stdin NoBuffering
+    hSetBuffering stdout NoBuffering
     putStrLn "Menu:"
     putStrLn "1 - Load Grid from file"
     putStrLn "2 - Modify existing Grid"
     putStrLn "3 - Create new Grid"
     putStrLn "Other - Quit"
-    putStr "Choice: "
+    putStr "Choice: " 
+    hSetBuffering stdin NoBuffering
     choice <- getChar
     hSetBuffering stdin LineBuffering
     putStrLn ""

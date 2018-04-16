@@ -74,6 +74,7 @@ modifyGrid grid@(Grid _ m n) = do
     -- * main logic
     setCursorPosition 1 1
     hSetBuffering stdin NoBuffering
+    showCursor
     newGrid <- fillGrid <$> editionLoop grid (0, 0)
     hSetBuffering stdin LineBuffering
     putStrLn "Enter new Automaton's save path (empty for no save): "

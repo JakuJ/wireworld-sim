@@ -2,3 +2,5 @@
 wireworld.cabal
 *~
 .vscode
+*.hi
+*.o
