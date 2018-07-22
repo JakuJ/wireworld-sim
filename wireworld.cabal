@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1609a4b1541ea1f212b6f2aee9a3d17dcfa95671ae5ef107c56e0242c1a3cbf9
+-- hash: d40208a4083aaafb607131405f08ac2a5b4f8ffcc21bdcdf8d692d608ae1114d
 
 name:           wireworld
 version:        0.1.0.0
@@ -16,7 +16,6 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
-
 extra-source-files:
     README.md
 
@@ -28,7 +27,10 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
+    , monad-loops
+    , split
   exposed-modules:
       Automaton
       Editing

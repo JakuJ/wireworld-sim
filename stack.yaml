@@ -1,7 +1,7 @@
 flags: {}
 packages:
 - .
+system-ghc: true
 allow-newer: true
-extra-deps:
-- cabal-helper-0.7.3.0
-resolver: lts-11.0
+extra-deps: []
+resolver: lts-12.1
