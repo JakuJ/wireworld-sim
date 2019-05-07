@@ -157,14 +157,15 @@ simulateAutomaton = do
     threadDelay 1000 -- TODO: atomic putStrLn
     putStrLn "Simulation function ended"
         where
-            delay = 500000 :: Int -- simulation's time step 
+            delay = 500000 :: Int -- simulation's time step
             startAnimationThread :: MVar Automaton -> IO ThreadId
             startAnimationThread automatM = flip forkFinally (\_ -> putStrLn "Animation thread terminated") $ forever $ do
                 modifyMVar_ automatM $ \automat1 -> do
                     setCursorPosition 0 0 
                     (print . grid) automat1  
                     clearFromCursorToLineEnd 
-                    putStrLn  ("Generation " ++ (show . generation) automat1) 
+                    putStrLn  ("Generation " ++ (show . generation) automat1)
+                    putStrLn "Press Q to quit"
                     return $ Automaton ((nextGeneration . grid) automat1) (generation automat1 + 1) 
                 threadDelay delay
             

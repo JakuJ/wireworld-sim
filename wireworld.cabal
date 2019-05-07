@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d40208a4083aaafb607131405f08ac2a5b4f8ffcc21bdcdf8d692d608ae1114d
+-- hash: 821dfcd3f16a41d3d238a570ea46ecde0f8cf24b962c2b14bc80a2c7323619ea
 
 name:           wireworld
 version:        0.1.0.0
@@ -15,7 +17,6 @@ copyright:      2018 Jakub Janaszkiewicz
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     README.md
 
